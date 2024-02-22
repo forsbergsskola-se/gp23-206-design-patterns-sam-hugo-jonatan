@@ -1,10 +1,6 @@
-using System;
-using System.Collections;
-using System.Collections.Generic;
+
 using System.Threading;
-using TMPro;
 using UnityEngine;
-using UnityEngine.Windows;
 using Random = UnityEngine.Random;
 
 public class Console : MonoBehaviour
@@ -16,10 +12,12 @@ public class Console : MonoBehaviour
     private Color _computedColor;
     private int _tick;
 
+
 #region information on how many updates would've been necessary
     private Color _previousColor; // IGNORE THIS
     private static int _totalUpdateCount; // IGNORE THIS
     private static int _requiredUpdateCount; // IGNORE THIS
+    private bool _isDirty;
 #endregion
 
     void Start()
@@ -27,14 +25,22 @@ public class Console : MonoBehaviour
         this._spriteRenderer = GetComponent<SpriteRenderer>();
     }
     
-    void FixedUpdate()
+   void FixedUpdate()
     {
-        // This will on random occasion change one or more parameters
-        SimulateVariousChangesOfParameters();
-
+            // This will on random occasion change one or more parameters
+            SimulateVariousChangesOfParameters();
+            
         // This will on random occasion return true
         if (ShouldUseComputedParameterThisFrame())
+        {
+            if (_isDirty)
+            {
+                // When the parameter has changed, the computed parameter needs to be updated
+                CalculateComputedDataFromParameters();
+                _isDirty = false;
+            }
             UtilizeComputedParameter(); // this is where the computed parameter is used
+        }
     }
 
     /// <summary>
@@ -63,9 +69,8 @@ public class Console : MonoBehaviour
     /// <param name="red"></param>
     void SetRed(int red)
     {
-        this._redParameter = red;
-        // When the parameter has changed, the computed parameter needs to be updated
-        CalculateComputedDataFromParameters();
+        _redParameter = red;
+        _isDirty = true;
     }
 
     /// <summary>
@@ -74,9 +79,8 @@ public class Console : MonoBehaviour
     /// <param name="green"></param>
     void SetGreen(int green)
     {
-        this._greenParameter = green;
-        // When the parameter has changed, the computed parameter needs to be updated
-        CalculateComputedDataFromParameters();
+        _greenParameter = green;
+        _isDirty = true;
     }
 
     /// <summary>
@@ -85,9 +89,8 @@ public class Console : MonoBehaviour
     /// <param name="blue"></param>
     void SetBlue(int blue)
     {
-        this._blueParameter = blue;
-        // When the parameter has changed, the computed parameter needs to be updated
-        CalculateComputedDataFromParameters();
+        _blueParameter = blue;
+        _isDirty = true;
     }
 
     /// <summary>
@@ -100,27 +103,26 @@ public class Console : MonoBehaviour
     void CalculateComputedDataFromParameters()
     {
         _totalUpdateCount++;
-        this._computedColor = new Color(_redParameter / 255f, _greenParameter / 255f, _blueParameter / 255f);
+        _computedColor = new Color(_redParameter / 255f, _greenParameter / 255f, _blueParameter / 255f);
         Thread.Sleep(1); // DO NOT REMOVE
     }
-
     bool ShouldUseComputedParameterThisFrame()
     {
-        this._tick++;
-        return this._tick % 50 == 0;
+        _tick++;
+        return _tick % 10 == 0;
     }
 
     void UtilizeComputedParameter()
     {
         #region debug information on how many updates would've been necessary
-        if (this._previousColor != new Color(_redParameter / 255f, _greenParameter / 255f, _blueParameter / 255f)) // IGNORE THIS
+        if (_previousColor != new Color(_redParameter / 255f, _greenParameter / 255f, _blueParameter / 255f)) // IGNORE THIS
         { // IGNORE THIS
             _requiredUpdateCount++; // IGNORE THIS
-            this._previousColor = this._computedColor; // IGNORE THIS
+            _previousColor = _computedColor; // IGNORE THIS
         } // IGNORE THIS
         Debug.Log($"Updated: {_totalUpdateCount}/{_requiredUpdateCount} times."); // IGNORE THIS
         #endregion // debug information on how many updates would've been necessary
-            
-        this._spriteRenderer.color = this._computedColor;
+        
+        _spriteRenderer.color = _computedColor;
     }
 }
