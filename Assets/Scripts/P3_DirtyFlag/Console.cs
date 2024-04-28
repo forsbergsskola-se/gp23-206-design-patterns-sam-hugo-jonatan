@@ -129,7 +129,6 @@ public class Console : MonoBehaviour
         #endregion // debug information on how many updates would've been necessary
             
         
-
         
         _spriteRenderer.color = _computedColor;
     }
